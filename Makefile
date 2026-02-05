@@ -1,6 +1,5 @@
 CC        = gcc
-CFLAGS   += -std=c++17
-# -Wall -Werror -Wextra
+CFLAGS   += -std=c++17 -Wall -Werror -Wextra
 
 TARGET   := app
 CCFILES  := app.cc

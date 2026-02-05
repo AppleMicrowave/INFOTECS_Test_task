@@ -2,35 +2,37 @@
 #define LIBLOGGER_H
 
 #include <chrono>
+#include <ctime>  // for time_t
 #include <fstream>
+#include <iomanip>
+#include <mutex>
 #include <string>
-
-// Библиотека - это набор функций, одна структура для сообщения, и перечисление
-// для уровней
-// У библиотеки одна функциональная идея - записывать сообщения в журнал
 
 enum class MessageLevel { INFO = 1, WARNING, CRITICAL };
 
 struct Message {
-  std::string text;
   std::chrono::system_clock::time_point time;
   MessageLevel level = MessageLevel::INFO;
+  std::string text;
 };
 
 class Logger {
  private:
-  std::string file_name;
+  std::ofstream file_writer;
+  std::mutex access_mutex;
   MessageLevel default_level;
 
  public:
-  Logger(const std::string& filename, const MessageLevel& level);
+  Logger(MessageLevel level);
+  ~Logger();
 
-  void setLevel(const MessageLevel& level);
-  MessageLevel getLevel();
-  void getMessage(const Message&);
-  void writeMessage();
+  MessageLevel getLevel() const;
+  void setLevel(MessageLevel level);
+  void writeMessage(const std::string& file, const Message& message);
+
+  // utils
+  static MessageLevel strToLevel(const std::string& str_value);
+  static std::string levelToStr(MessageLevel level);
 };
-
-void init_log();
 
 #endif

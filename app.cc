@@ -2,14 +2,11 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 #include "liblogger.hh"
 
-// Суть приложения - обособленно от библиотеки принимать и передавать сообщения
-// менеджеру логов
-
-MessageLevel parseLevel(const std::string& str_value);
-std::string levelToStr(const MessageLevel& level);
+Message readInput();
 
 int main(int argc, char** argv) {
   // arg check
@@ -30,22 +27,20 @@ int main(int argc, char** argv) {
     }
   }
 
-  const MessageLevel defaut_level = parseLevel(argv[2] ? argv[2] : "info");
-
-  Logger log_manager{file, defaut_level};
-
-  std::fstream file_reader;
-  file_reader.open(file,
-                   std::fstream::in | std::fstream::out | std::fstream::app);
+  MessageLevel defaut_level = Logger::strToLevel(argv[2] ? argv[2] : "info");
+  Logger log_manager{defaut_level};
 
   char choice;
   while (true) {
+    std::system("clear");
+
     choice = 0;
     std::cout << "Current logfile: " << file
-              << "\nLog level: " << levelToStr(log_manager.getLevel()) << "\n";
+              << "\nLog level: " << Logger::levelToStr(log_manager.getLevel())
+              << "\n";
     std::cout << "1. Send log\n";
     std::cout << "2. Change log level\n";
-    std::cout << "3. Exit\n:";
+    std::cout << "3. Exit\n>";
 
     std::cin.get(choice);
     std::cin.ignore(1000, '\n');
@@ -53,57 +48,48 @@ int main(int argc, char** argv) {
       case '1': {
         std::system("clear");
 
-        int level = static_cast<int>(log_manager.getLevel());
-        std::cout << "Message importance level(Info - 1, Warning - "
-                     "2, Critical - 3), or press Enter to pass\n:";
+        Message message = readInput();
+        if (message.text != "\n")
+          // start a new thread to give&write
+          std::thread([&log_manager, file, message]() {
+            log_manager.writeMessage(file, message);
+          }).join();
 
-        std::cout << "\nEnter message: ";
         break;
       }
       case '2': {
         std::system("clear");
 
-        std::cout
-            << "Set default importance level(info | warning | critical)\n:";
-
         std::string input;
-        std::getline(std::cin, input);
-        log_manager.setLevel(parseLevel(input));
+        std::cout
+            << "Set default importance level (info | warning | critical)\n>";
 
-        std::system("clear");
+        std::getline(std::cin, input);
+        log_manager.setLevel(Logger::strToLevel(input));
+
         break;
       }
       case '3':
         goto end_loop;
       default:
-        std::system("clear");
         break;
     }
   }
 end_loop:
-  file_reader.close();
-
   return 0;
 }
 
-MessageLevel parseLevel(const std::string& str_value) {
-  MessageLevel level;
-  if (str_value == "critical")
-    level = MessageLevel::CRITICAL;
-  else if (str_value == "warning")
-    level = MessageLevel::WARNING;
-  else
-    level = MessageLevel::INFO;
-  return level;
-}
+Message readInput() {
+  std::string input;
 
-std::string levelToStr(const MessageLevel& level_value) {
-  std::string string;
-  if (level_value == MessageLevel::CRITICAL)
-    string = "critical";
-  else if (level_value == MessageLevel::WARNING)
-    string = "warning";
-  else
-    string = "info";
-  return string;
+  std::cout << "Message importance level(info | warning | critical) or Enter "
+               "to pass\n>";
+  std::getline(std::cin, input);
+  MessageLevel level = Logger::strToLevel(input);
+
+  std::cout << "Enter message, then press Enter to send..\n>";
+  std::getline(std::cin, input);
+  std::string text{input};
+
+  return Message{std::chrono::system_clock::now(), level, text};
 }
