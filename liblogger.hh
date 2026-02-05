@@ -3,14 +3,13 @@
 
 #include <chrono>
 #include <fstream>
-#include <iostream>
 #include <string>
 
 // Библиотека - это набор функций, одна структура для сообщения, и перечисление
 // для уровней
 // У библиотеки одна функциональная идея - записывать сообщения в журнал
 
-enum class MessageLevel { INFO = 0, WARNING, CRITICAL };
+enum class MessageLevel { INFO = 1, WARNING, CRITICAL };
 
 struct Message {
   std::string text;
@@ -24,11 +23,11 @@ class Logger {
   MessageLevel default_level;
 
  public:
-  Logger();
+  Logger(const std::string& filename, const MessageLevel& level);
 
-  void setLevel();
-  void getMessage(const Message& message);
-  void getMessage(const Message& message, const MessageLevel& level);
+  void setLevel(const MessageLevel& level);
+  MessageLevel getLevel();
+  void getMessage(const Message&);
   void writeMessage();
 };
 

@@ -1,21 +1,33 @@
-CC       = gcc
-CFLAGS  += -std=c++17 
+CC        = gcc
+CFLAGS   += -std=c++17
 # -Wall -Werror -Wextra
 
-CCFILES  = app.cc utils.cc
-OBJ      = $(CCFILES:%.cc=%.o)
-LIBFILES = liblogger.cc liblogger.hh
-LIB      = liblogger.so
+TARGET   := app
+CCFILES  := app.cc
+OBJ      := $(CCFILES:%.cc=%.o)
+LIBFILES := liblogger.cc liblogger.hh
+LIBOBJ   := liblogger.o
+LIB      := liblogger.so
 
 .PHONY: all, test, clean
 
-all: $(LIB) app
+all: $(LIB) $(TARGET)
 
-app: $(CCFILES)
-	$(CC) $(CFLAGS) $^ -o $@ -lstdc++
+# compile whole app with dynamic lib
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ -L. -llogger -lstdc++ 
 
-$(LIB): $(LIBFILES)
-	$(CC) $(CFLAGS) -fPIC -shared $^ -o $@ -lstdc++
+#build app obj
+$(OBJ): $(CCFILES)
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+#build .so file
+$(LIB): $(LIBOBJ)
+	$(CC) $(CFLAGS) -shared $^ -o $@	
+
+# build lib obj
+$(LIBOBJ): $(LIBFILES)
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 clean:
-	rm -rf *.o *.so app
+	rm -rf *.o *.so $(TARGET)
