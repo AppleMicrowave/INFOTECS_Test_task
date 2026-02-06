@@ -1,12 +1,11 @@
 #ifndef LIBLOGGER_H
 #define LIBLOGGER_H
 
-#include <chrono>
-#include <ctime>  // for time_t
-#include <fstream>
-#include <iomanip>
-#include <mutex>
-#include <string>
+#include <bits/chrono.h>  // for system_clock
+
+#include <fstream>  // for basic_ofstream, ofstream
+#include <mutex>    // for mutex
+#include <string>   // for string, basic_string
 
 enum class MessageLevel { INFO = 1, WARNING, CRITICAL };
 
@@ -24,7 +23,6 @@ class Logger {
 
  public:
   Logger(MessageLevel level);
-  ~Logger();
 
   MessageLevel getLevel() const;
   void setLevel(MessageLevel level);

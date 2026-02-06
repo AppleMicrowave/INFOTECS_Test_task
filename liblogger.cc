@@ -1,10 +1,11 @@
 #include "liblogger.hh"
 
-#include <iostream>
+#include <ctime>    // for localtime
+#include <iomanip>  // for operator<<, put_time
+
+#include "liblogger.hh"
 
 Logger::Logger(MessageLevel level) : default_level(level) {}
-
-Logger::~Logger() { file_writer.close(); }
 
 MessageLevel Logger::getLevel() const { return default_level; }
 
